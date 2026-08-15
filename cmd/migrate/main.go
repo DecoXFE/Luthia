@@ -26,7 +26,7 @@ func main() {
 
 	cfg := config.Load()
 
-	m, err := migrate.New("file://migrations", cfg.Database.DSN())
+	m, err := migrate.New("file://internal/store/postgres/migrations", cfg.Database.DSN())
 	if err != nil {
 		logger.Error("failed to create migrator", "error", err)
 		os.Exit(1)

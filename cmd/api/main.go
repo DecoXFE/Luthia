@@ -1,37 +1,44 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log/slog"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/DecoXFE/luthia/internal/api"
 	"github.com/DecoXFE/luthia/internal/config"
+	"github.com/DecoXFE/luthia/internal/store/postgres"
 )
 
 func main() {
+	// Logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
+	slog.SetDefault(logger)
 
+	// Configuration
 	cfg := config.Load()
 
-	mux := api.NewServer()
+	// Database
+	ctx := context.Background()
 
-	addr := fmt.Sprintf(":%d", cfg.Server.Port)
-	logger.Info("starting luthia api", "addr", addr)
+	db, err := postgres.New(ctx, cfg.Database.DSN())
+	if err != nil {
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("connected to database successfully")
 
-	server := &http.Server{
-		Addr:         addr,
-		Handler:      mux,
-		ReadTimeout:  time.Duration(cfg.Server.ReadTimeoutSecs) * time.Second,
-		WriteTimeout: time.Duration(cfg.Server.WriteTimeoutSecs) * time.Second,
-		IdleTimeout:  time.Duration(cfg.Server.IdleTimeoutSecs) * time.Second,
+	defer db.Close()
+
+	// Startup
+	api := api.Application{
+		Config: *cfg,
+		DbPool: db.Pool,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
+	if err := api.Run(api.Mount()); err != nil {
 		logger.Error("server failed", "error", err)
 		os.Exit(1)
 	}
