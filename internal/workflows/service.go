@@ -13,7 +13,10 @@ import (
 	store "github.com/DecoXFE/luthia/internal/store/postgres/sqlc"
 )
 
-const maxNameLength = 255
+const (
+	maxNameLength  = 255
+	pgErrCodeUniqueViolation = "23505"
+)
 
 var (
 	ErrNotFound    = errors.New("workflow not found")
@@ -50,7 +53,7 @@ func (s *service) Create(ctx context.Context, tempWorkflow store.CreateWorkflowP
 	workflow, err := s.queries.CreateWorkflow(ctx, tempWorkflow)
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgErr.Code == pgErrCodeUniqueViolation {
 			return store.Workflow{}, ErrNameTaken
 		}
 
