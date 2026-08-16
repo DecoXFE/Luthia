@@ -78,6 +78,63 @@ func (e JobStatus) Valid() bool {
 	return false
 }
 
+type RunStatus string
+
+const (
+	RunStatusPENDING   RunStatus = "PENDING"
+	RunStatusRUNNING   RunStatus = "RUNNING"
+	RunStatusCOMPLETED RunStatus = "COMPLETED"
+	RunStatusFAILED    RunStatus = "FAILED"
+	RunStatusCANCELLED RunStatus = "CANCELLED"
+)
+
+func (e *RunStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RunStatus(s)
+	case string:
+		*e = RunStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RunStatus: %T", src)
+	}
+	return nil
+}
+
+type NullRunStatus struct {
+	RunStatus RunStatus `json:"run_status"`
+	Valid     bool      `json:"valid"` // Valid is true if RunStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRunStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.RunStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RunStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRunStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RunStatus), nil
+}
+
+func (e RunStatus) Valid() bool {
+	switch e {
+	case RunStatusPENDING,
+		RunStatusRUNNING,
+		RunStatusCOMPLETED,
+		RunStatusFAILED,
+		RunStatusCANCELLED:
+		return true
+	}
+	return false
+}
+
 type WorkflowStatus string
 
 const (
@@ -130,17 +187,21 @@ func (e WorkflowStatus) Valid() bool {
 }
 
 type Job struct {
-	ID           uuid.UUID       `json:"id"`
-	WorkflowID   uuid.UUID       `json:"workflow_id"`
-	Step         string          `json:"step"`
-	Payload      json.RawMessage `json:"payload"`
-	Status       JobStatus       `json:"status"`
-	Priority     *int32          `json:"priority"`
-	AttemptCount *int32          `json:"attempt_count"`
-	MaxRetries   *int32          `json:"max_retries"`
-	ScheduledAt  *time.Time      `json:"scheduled_at"`
-	CreatedAt    *time.Time      `json:"created_at"`
-	UpdatedAt    *time.Time      `json:"updated_at"`
+	ID             uuid.UUID       `json:"id"`
+	WorkflowID     uuid.UUID       `json:"workflow_id"`
+	Step           string          `json:"step"`
+	Payload        json.RawMessage `json:"payload"`
+	Status         JobStatus       `json:"status"`
+	Priority       *int32          `json:"priority"`
+	AttemptCount   *int32          `json:"attempt_count"`
+	MaxRetries     *int32          `json:"max_retries"`
+	ScheduledAt    *time.Time      `json:"scheduled_at"`
+	CreatedAt      *time.Time      `json:"created_at"`
+	UpdatedAt      *time.Time      `json:"updated_at"`
+	RunID          *uuid.UUID      `json:"run_id"`
+	LeaseExpiresAt *time.Time      `json:"lease_expires_at"`
+	Result         json.RawMessage `json:"result"`
+	Error          *string         `json:"error"`
 }
 
 type JobEvent struct {
@@ -167,4 +228,13 @@ type Workflow struct {
 	Config      json.RawMessage `json:"config"`
 	CreatedAt   *time.Time      `json:"created_at"`
 	UpdatedAt   *time.Time      `json:"updated_at"`
+}
+
+type WorkflowRun struct {
+	ID         uuid.UUID  `json:"id"`
+	WorkflowID uuid.UUID  `json:"workflow_id"`
+	Status     RunStatus  `json:"status"`
+	Error      *string    `json:"error"`
+	CreatedAt  *time.Time `json:"created_at"`
+	FinishedAt *time.Time `json:"finished_at"`
 }
