@@ -18,6 +18,7 @@ import (
 
 type MockQuerier struct {
 	mock.Mock
+	store.Querier
 }
 
 func (m *MockQuerier) CreateWorkflow(ctx context.Context, arg store.CreateWorkflowParams) (store.Workflow, error) {

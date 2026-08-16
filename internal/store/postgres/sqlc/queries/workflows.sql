@@ -11,3 +11,8 @@ RETURNING *;
 DELETE FROM workflows
 WHERE id = $1
 RETURNING id;
+
+-- name: GetWorkflow :one
+SELECT *
+FROM workflows
+WHERE id = $1;

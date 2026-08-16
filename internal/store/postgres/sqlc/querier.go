@@ -6,14 +6,33 @@ package store
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type Querier interface {
+	ClaimNextJob(ctx context.Context, leaseExpiresAt *time.Time) (Job, error)
+	CompleteJob(ctx context.Context, arg CompleteJobParams) (Job, error)
+	CompleteRun(ctx context.Context, id uuid.UUID) (WorkflowRun, error)
+	CreateJob(ctx context.Context, arg CreateJobParams) (Job, error)
+	CreateJobEvent(ctx context.Context, arg CreateJobEventParams) (JobEvent, error)
+	CreateRun(ctx context.Context, workflowID uuid.UUID) (WorkflowRun, error)
 	CreateWorkflow(ctx context.Context, arg CreateWorkflowParams) (Workflow, error)
 	DeleteWorkflow(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	FailJob(ctx context.Context, arg FailJobParams) (Job, error)
+	FailRun(ctx context.Context, arg FailRunParams) (WorkflowRun, error)
+	FindExpiredLeases(ctx context.Context) ([]Job, error)
+	GetJob(ctx context.Context, id uuid.UUID) (Job, error)
+	GetRun(ctx context.Context, id uuid.UUID) (WorkflowRun, error)
+	GetWorkflow(ctx context.Context, id uuid.UUID) (Workflow, error)
+	HeartbeatJob(ctx context.Context, arg HeartbeatJobParams) (Job, error)
+	ListJobEvents(ctx context.Context, jobID uuid.UUID) ([]JobEvent, error)
+	ListJobsByRun(ctx context.Context, runID uuid.UUID) ([]Job, error)
+	ListRunsByWorkflow(ctx context.Context, workflowID uuid.UUID) ([]WorkflowRun, error)
 	ListWorkflows(ctx context.Context) ([]Workflow, error)
+	PromoteRetries(ctx context.Context) ([]Job, error)
+	RequeueJob(ctx context.Context, id uuid.UUID) (Job, error)
 }
 
 var _ Querier = (*Queries)(nil)

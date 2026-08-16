@@ -188,7 +188,6 @@ func (e WorkflowStatus) Valid() bool {
 
 type Job struct {
 	ID             uuid.UUID       `json:"id"`
-	WorkflowID     uuid.UUID       `json:"workflow_id"`
 	Step           string          `json:"step"`
 	Payload        json.RawMessage `json:"payload"`
 	Status         JobStatus       `json:"status"`
@@ -198,7 +197,7 @@ type Job struct {
 	ScheduledAt    *time.Time      `json:"scheduled_at"`
 	CreatedAt      *time.Time      `json:"created_at"`
 	UpdatedAt      *time.Time      `json:"updated_at"`
-	RunID          *uuid.UUID      `json:"run_id"`
+	RunID          uuid.UUID       `json:"run_id"`
 	LeaseExpiresAt *time.Time      `json:"lease_expires_at"`
 	Result         json.RawMessage `json:"result"`
 	Error          *string         `json:"error"`
