@@ -1,5 +1,11 @@
 # Configuring Retries
 
+:::note[Planned]
+
+This guide is **not applicable yet** — retries depend on the Jobs API and the worker, which are not implemented.
+
+:::
+
 Luthia automatically retries failed jobs. Here's how to configure this behavior.
 
 ## Default Behavior

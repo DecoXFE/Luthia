@@ -7,20 +7,33 @@ Get Luthia running on your machine in 5 minutes.
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
 - [Go](https://go.dev/dl/) 1.22+ (for local development)
 
-## 1. Start Everything
+## 1. Start the Database
+
+Luthia currently uses Postgres as its store. Start just the database:
 
 ```bash
 git clone https://github.com/DecoXFE/luthia.git
 cd luthia
-make dev
+docker compose up postgres
 ```
 
-This starts:
-- **API server** on `http://localhost:8080`
-- **PostgreSQL** on `localhost:5432`
-- **Redis** on `localhost:6379`
+## 2. Run Migrations
 
-## 2. Verify It Works
+```bash
+make migrate
+```
+
+This applies the SQL migrations (schema + enums) to the database.
+
+## 3. Start the API
+
+```bash
+make run-api
+```
+
+The API server starts on `http://localhost:8080`.
+
+## 4. Verify It Works
 
 ```bash
 curl http://localhost:8080/health
@@ -32,7 +45,7 @@ Expected response:
 {"status": "ok"}
 ```
 
-## 3. Create Your First Workflow
+## 5. Create Your First Workflow
 
 ```bash
 curl -X POST http://localhost:8080/api/workflows \
@@ -40,38 +53,39 @@ curl -X POST http://localhost:8080/api/workflows \
   -d '{"name": "process-images", "description": "Resize and compress images"}'
 ```
 
-## 4. Submit Jobs
+You should get a `201 Created` response with the workflow's `id`.
+
+## 6. List Workflows
 
 ```bash
-curl -X POST http://localhost:8080/api/workflows/<workflow-id>/jobs \
-  -H "Content-Type: application/json" \
-  -d '{"step": "resize", "payload": {"image": "photo1.jpg", "width": 800}}'
-```
-
-## 5. Check Job Status
-
-```bash
-curl http://localhost:8080/api/jobs/<job-id>
+curl http://localhost:8080/api/workflows
 ```
 
 ## Stop Everything
 
 ```bash
-make dev-down
+docker compose down
 ```
 
-## What Just Happened
+## What's Implemented Today
 
 ```
-1. make dev           → Docker builds Go binary, starts Postgres + Redis
-2. POST /workflows    → Creates a workflow in the database
-3. POST /jobs         → Creates a job with status QUEUED
-4. Worker picks up    → Changes status to RUNNING, executes, marks COMPLETED
-5. GET /jobs          → Shows current status and attempt history
+1. docker compose up postgres  → Postgres running
+2. make migrate                → Schema + enums applied
+3. make run-api                → API on :8080
+4. POST /api/workflows         → Creates a workflow (201)
+5. GET  /api/workflows         → Lists workflows
+6. DELETE /api/workflows/:id   → Deletes a workflow (204)
 ```
+
+:::note[Roadmap]
+
+Jobs, workers, Redis queue and the dashboard are **planned** but not implemented yet.
+
+:::
 
 ## Next Steps
 
 - [Architecture](architecture) — Understand how the pieces fit together
 - [Concepts: Workflows](concepts/workflows) — What workflows are and how to use them
-- [API Reference](api/rest-reference) — All available endpoints
+- [API Reference](/api-reference) — All available endpoints (interactive)

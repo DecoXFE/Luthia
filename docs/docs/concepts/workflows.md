@@ -13,7 +13,7 @@ curl -X POST http://localhost:8080/api/workflows \
   }'
 ```
 
-Response:
+Response (`201 Created`):
 
 ```json
 {
@@ -21,9 +21,16 @@ Response:
   "name": "process-images",
   "description": "Resize and compress product images",
   "status": "active",
-  "created_at": "2025-01-15T10:30:00Z",
-  "updated_at": "2025-01-15T10:30:00Z"
+  "config": {},
+  "created_at": "2026-08-15T10:30:00Z",
+  "updated_at": "2026-08-15T10:30:00Z"
 }
+```
+
+Creating a workflow with a `name` that already exists returns `409 Conflict`:
+
+```json
+{ "error": "workflow name already exists" }
 ```
 
 ## Listing Workflows
@@ -32,14 +39,22 @@ Response:
 curl http://localhost:8080/api/workflows
 ```
 
+## Deleting a Workflow
+
+```bash
+curl -X DELETE http://localhost:8080/api/workflows/<workflow-id>
+```
+
+Returns `204 No Content`. Deleting a workflow also deletes its jobs (cascade).
+
 ## Workflow Structure
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | UUID | Unique identifier |
-| `name` | string | Human-readable name (unique) |
+| `name` | string | Human-readable name (unique, max 255 chars) |
 | `description` | string | What this workflow does |
-| `status` | string | `active` or `paused` |
+| `status` | string | `active` or `inactive` (DB enum `workflow_status`) |
 | `config` | JSONB | Workflow-specific configuration |
 | `created_at` | timestamp | When it was created |
 | `updated_at` | timestamp | Last modification |

@@ -25,6 +25,17 @@ func (h *Handler) Enroute(r chi.Router) {
 	r.Delete("/api/workflows/{id}", h.Delete)
 }
 
+// Create godoc
+// @Summary Create a workflow
+// @Description Creates a new workflow. The name must be unique.
+// @Tags Workflows
+// @Accept json
+// @Produce json
+// @Param request body store.CreateWorkflowParams true "Workflow to create"
+// @Success 201 {object} store.Workflow
+// @Failure 400 {object} json.ErrorResponse "Invalid request body or invalid name"
+// @Failure 409 {object} json.ErrorResponse "Workflow name already exists"
+// @Router /api/workflows [post]
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var tempWorkflow store.CreateWorkflowParams
 	if err := json.Read(r, &tempWorkflow); err != nil {
@@ -48,6 +59,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	json.Write(w, http.StatusCreated, workflow)
 }
 
+// List godoc
+// @Summary List workflows
+// @Description Returns all workflows.
+// @Tags Workflows
+// @Produce json
+// @Success 200 {array} store.Workflow
+// @Router /api/workflows [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	workflows, err := h.service.List(r.Context())
 	if err != nil {
@@ -58,6 +76,15 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	json.Write(w, http.StatusOK, workflows)
 }
 
+// Delete godoc
+// @Summary Delete a workflow
+// @Description Deletes a workflow and its jobs (cascade).
+// @Tags Workflows
+// @Param id path string true "Workflow ID"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} json.ErrorResponse "Invalid workflow id"
+// @Failure 404 {object} json.ErrorResponse "Workflow not found"
+// @Router /api/workflows/{id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {

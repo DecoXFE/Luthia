@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -20,6 +21,7 @@ type ServerConfig struct {
 	ReadTimeoutSecs  int
 	WriteTimeoutSecs int
 	IdleTimeoutSecs  int
+	AllowedOrigins   []string
 }
 
 type DatabaseConfig struct {
@@ -57,6 +59,7 @@ func Load() *Config {
 			ReadTimeoutSecs:  getEnvInt("READ_TIMEOUT_SECONDS"),
 			WriteTimeoutSecs: getEnvInt("WRITE_TIMEOUT_SECONDS"),
 			IdleTimeoutSecs:  getEnvInt("IDLE_TIMEOUT_SECONDS"),
+			AllowedOrigins:   getEnvList("CORS_ALLOWED_ORIGINS"),
 		},
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST"),
@@ -84,4 +87,21 @@ func getEnv(key string) string {
 func getEnvInt(key string) int {
 	value, _ := strconv.Atoi(os.Getenv(key))
 	return value
+}
+
+func getEnvList(key string) []string {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+
+	return origins
 }

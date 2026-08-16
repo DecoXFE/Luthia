@@ -1,5 +1,11 @@
 # Submitting Jobs
 
+:::note[Planned]
+
+This guide is **not applicable yet** — the Jobs API does not exist. See [Concepts: Jobs](../concepts/jobs) for details.
+
+:::
+
 Learn how to submit jobs to Luthia for processing.
 
 ## Submit a Single Job

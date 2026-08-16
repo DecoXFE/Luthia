@@ -2,6 +2,12 @@
 
 This page explains how Luthia works internally — the components, how they communicate, and why each decision was made.
 
+:::note[Status]
+
+Today Luthia implements the **API server + Postgres store** for workflows (create, list, delete). The Redis queue, workers, jobs API and dashboard are **planned**; they appear below as the target architecture.
+
+:::
+
 ## High-Level Overview
 
 ```
@@ -196,48 +202,63 @@ This gives you:
 
 ## Configuration
 
-All configuration via environment variables:
+All configuration via environment variables (loaded from `.env` if present):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 8080 | API server port |
+| `READ_TIMEOUT_SECONDS` | 0 | Server read timeout |
+| `WRITE_TIMEOUT_SECONDS` | 0 | Server write timeout |
+| `IDLE_TIMEOUT_SECONDS` | 0 | Server idle timeout |
+| `CORS_ALLOWED_ORIGINS` | *(none)* | Comma-separated list of allowed browser origins; CORS disabled when empty |
 | `DB_HOST` | localhost | PostgreSQL host |
 | `DB_PORT` | 5432 | PostgreSQL port |
 | `DB_USER` | luthia | PostgreSQL user |
 | `DB_PASSWORD` | luthia | PostgreSQL password |
 | `DB_NAME` | luthia | PostgreSQL database |
-| `REDIS_ADDR` | localhost:6379 | Redis address |
-| `REDIS_PASSWORD` | (empty) | Redis password |
-| `WORKER_CONCURRENCY` | 5 | Jobs per worker |
-| `WORKER_POLL_INTERVAL` | 2 | Seconds between polls |
+
+:::note[Planned]
+
+`REDIS_ADDR`, `REDIS_PASSWORD`, `REDIS_DB`, `WORKER_CONCURRENCY` and `WORKER_POLL_INTERVAL` are defined in the config struct but unused until the queue and worker land.
+
+:::
 
 ## Project Structure
 
 ```
 luthia/
-├── cmd/                    # Entry points (each binary)
-│   ├── api/main.go         # API server
-│   ├── worker/main.go      # Worker process
-│   └── migrate/main.go     # DB migration tool
-├── internal/               # Private code (can't import externally)
-│   ├── api/                # HTTP layer
-│   │   ├── router.go       # Route definitions
-│   │   └── handlers/       # Route implementations
-│   ├── config/             # Configuration loading
-│   ├── engine/             # Core business logic
-│   ├── model/              # Domain types
-│   ├── queue/              # Queue abstraction
-│   ├── store/              # Database access
-│   └── worker/             # Worker logic
-├── pkg/                    # Public code (SDKs)
-├── migrations/             # SQL migrations
-├── dashboard/              # React frontend
-├── docs/                   # Docusaurus documentation
-└── docker-compose.yml      # Local development
+├── cmd/                        # Entry points (each binary)
+│   ├── api/main.go             # API server
+│   ├── worker/main.go          # Worker process (planned)
+│   └── migrate/main.go         # DB migration tool
+├── internal/                   # Private code (can't import externally)
+│   ├── api/                    # HTTP layer, router mount
+│   │   └── handlers/           # Health handler
+│   ├── config/                 # Configuration loading
+│   ├── json/                   # JSON read/write helpers
+│   ├── store/                  # Database access
+│   │   └── postgres/           # pgx pool + migrations + sqlc
+│   │       └── sqlc/           # Generated types & queries
+│   └── workflows/              # Workflow service + handlers
+├── bin/                        # Compiled binaries
+├── docs/                       # Docusaurus documentation
+├── docker-compose.yml          # Local development
+├── Makefile
+├── sqlc.yaml
+└── PLAN.md                     # Development roadmap
 ```
 
 **Why `internal/`?**
 Go enforces that packages in `internal/` can't be imported by code outside the module. This keeps our implementation details private and prevents external coupling.
+
+**How the layers talk:**
+```
+handlers (HTTP) → service (business rules) → sqlc (store.Querier) → pgx → Postgres
+```
+
+- `internal/workflows/service.go` defines a `Service` interface; handlers depend on the interface, not the implementation. This keeps HTTP code decoupled from storage and makes unit testing easy.
+- `internal/store/postgres/sqlc` contains the generated types (`Workflow`, `CreateWorkflowParams`, …) and the `Querier` interface. Handlers and services import these types directly — there is no separate `model` package.
+- Type mapping is configured in `sqlc.yaml`: UUIDs become `github.com/google/uuid.UUID`, `jsonb` becomes `encoding/json.RawMessage`, and timestamps become `time.Time`. DB enums generate typed constants with a `Valid()` method.
 
 ## Scaling Model
 

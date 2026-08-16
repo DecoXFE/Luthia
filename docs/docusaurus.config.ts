@@ -1,6 +1,7 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import type {ScalarOptions} from '@scalar/docusaurus';
 
 const config: Config = {
   title: 'Luthia',
@@ -23,6 +24,26 @@ const config: Config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+
+  plugins: [
+    [
+      '@scalar/docusaurus',
+      {
+        label: 'API Reference',
+        route: '/api-reference',
+        showNavLink: true,
+        configuration: {
+          url: '/openapi/swagger.json',
+          agent: {
+            disabled: true,
+          },
+          mcp: {
+            disabled: true,
+          },
+        },
+      } as ScalarOptions,
+    ],
+  ],
 
   presets: [
     [
@@ -71,6 +92,7 @@ const config: Config = {
             { label: 'Introduction', to: '/docs/intro' },
             { label: 'Quickstart', to: '/docs/quickstart' },
             { label: 'Architecture', to: '/docs/architecture' },
+            { label: 'API Reference', to: '/api-reference' },
           ],
         },
         {

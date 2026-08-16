@@ -1,5 +1,11 @@
 # Workers
 
+:::note[Planned]
+
+Workers are **not implemented yet**. No worker binary, no Redis queue. The `workers` table exists in the schema (`id`, `hostname`, `status`, `current_job_id`, `last_heartbeat`). This page documents the target design.
+
+:::
+
 A **worker** is a process that pulls jobs from the queue and executes them.
 
 ## How Workers Work

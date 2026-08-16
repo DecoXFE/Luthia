@@ -19,11 +19,6 @@ const sidebars: SidebarsConfig = {
         'guides/configuring-retries',
       ],
     },
-    {
-      type: 'category',
-      label: 'API Reference',
-      items: ['api/rest-reference'],
-    },
   ],
 };
 

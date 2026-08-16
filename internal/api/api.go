@@ -12,6 +12,7 @@ import (
 	"github.com/DecoXFE/luthia/internal/workflows"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -27,6 +28,16 @@ func (app *Application) Mount() http.Handler {
 	router.Use(middleware.ClientIPFromRemoteAddr)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+
+	if len(app.Server.AllowedOrigins) > 0 {
+		router.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   app.Server.AllowedOrigins,
+			AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+			AllowCredentials: false,
+			MaxAge:           300,
+		}))
+	}
 
 	router.Use(middleware.Timeout(60 * time.Second))
 

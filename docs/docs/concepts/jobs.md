@@ -1,5 +1,11 @@
 # Jobs
 
+:::note[Planned]
+
+The Jobs API is **not implemented yet**. The `jobs` table, the `job_status` enum (`CREATED`, `QUEUED`, `PICKED_UP`, `RUNNING`, `COMPLETED`, `FAILED`, `RETRYING`, `DEAD_LETTER`, `CANCELLED`) and the `job_events` table exist in the schema, but there are no endpoints or worker to process them yet. This page documents the target behavior.
+
+:::
+
 A **job** is a single unit of work within a workflow. This is what actually gets executed.
 
 ## Submitting a Job

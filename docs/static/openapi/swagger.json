@@ -1,0 +1,220 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Open-source infrastructure for running reliable background workflows.",
+        "title": "Luthia API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/api/workflows": {
+            "get": {
+                "description": "Returns all workflows.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Workflows"
+                ],
+                "summary": "List workflows",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_store_postgres_sqlc.Workflow"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new workflow. The name must be unique.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Workflows"
+                ],
+                "summary": "Create a workflow",
+                "parameters": [
+                    {
+                        "description": "Workflow to create",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_store_postgres_sqlc.CreateWorkflowParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_store_postgres_sqlc.Workflow"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or invalid name",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_json.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Workflow name already exists",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_json.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/workflows/{id}": {
+            "delete": {
+                "description": "Deletes a workflow and its jobs (cascade).",
+                "tags": [
+                    "Workflows"
+                ],
+                "summary": "Delete a workflow",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Workflow ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid workflow id",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_json.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Workflow not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_json.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns the service health status.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_handlers.HealthResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_DecoXFE_luthia_internal_json.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_DecoXFE_luthia_internal_store_postgres_sqlc.CreateWorkflowParams": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_DecoXFE_luthia_internal_store_postgres_sqlc.Workflow": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_DecoXFE_luthia_internal_store_postgres_sqlc.WorkflowStatus"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_DecoXFE_luthia_internal_store_postgres_sqlc.WorkflowStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive"
+            ],
+            "x-enum-varnames": [
+                "WorkflowStatusActive",
+                "WorkflowStatusInactive"
+            ]
+        },
+        "internal_api_handlers.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "Workflows are the top-level units of work in Luthia. They group related jobs, define how they should run (the workflow \"config\") and track their overall state. The workflows API is the entry point: create a workflow to start tracking work, list them to see what exists, and delete them when they are no longer needed (removing their jobs too). To learn what a workflow is and the states it can be in, see the workflows concept guide: https://luthia.dev/docs/concepts/workflows",
+            "name": "Workflows",
+            "externalDocs": {
+                "description": "Understand what a workflow is, its lifecycle and its states.",
+                "url": "https://luthia.dev/docs/concepts/workflows"
+            }
+        },
+        {
+            "description": "Operational endpoints for checking that the API is alive and healthy. These are meant for load balancers, uptime probes and CI pipelines, not for application code. If you are integrating Luthia into your infrastructure, wire the health endpoint into your monitoring rather than poking at business endpoints.",
+            "name": "System"
+        }
+    ]
+}

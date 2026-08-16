@@ -51,13 +51,23 @@ Developers who need to:
 |-------|-----------|
 | Backend | Go |
 | Database | PostgreSQL |
-| Queue | Redis ( Streams) |
-| Frontend | React + TypeScript |
+| Queue | Redis (Streams) — planned |
+| Frontend | React + TypeScript — planned |
 | Docs | Docusaurus |
+
+## Current Status
+
+Luthia is in active development. **Implemented today:**
+
+- Workflow CRUD API (`POST`/`GET`/`DELETE /api/workflows`)
+- PostgreSQL storage with migrations and typed SQL (sqlc)
+- Health check endpoint
+
+**Planned:** jobs API, Redis queue, workers, scheduler, dashboard. See [PLAN.md](https://github.com/DecoXFE/luthia/blob/main/PLAN.md) on GitHub for the roadmap.
 
 ## Quick Links
 
 - [Quickstart](quickstart) — Get running in 5 minutes
 - [Architecture](architecture) — How Luthia works internally
 - [Concepts](concepts/workflows) — Core building blocks
-- [API Reference](api/rest-reference) — REST endpoint documentation
+- [API Reference](/api-reference) — REST endpoint documentation (interactive)
