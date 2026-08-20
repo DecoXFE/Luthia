@@ -46,4 +46,11 @@ To run the test suite:
 make test
 ```
 
+For more information you can use:
+```bash
+make help
+```
+
 See [PLAN.md](PLAN.md) for the development roadmap.
+
+
